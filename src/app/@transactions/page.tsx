@@ -1,8 +1,8 @@
-import { TransactionsAggregations } from "../components/transactions-aggregations";
+import { AggregationsGrid } from "../components/aggregations-grid";
 import { getAllTransactions } from "./data";
 
 export default async function Transactions() {
   const transactions = await getAllTransactions();
 
-  return <TransactionsAggregations transactions={transactions} />;
+  return <AggregationsGrid transactions={transactions} />;
 }

@@ -1,6 +1,6 @@
 import { uniqueSorted } from "@/lib/utils";
 import { Select } from "./select";
-import { GroupingKey } from "./transactions-aggregations";
+import { GroupingKey } from "./aggregation";
 import { TransactionDTO } from "@/lib/entities/transaction";
 import { memo, useCallback, useMemo } from "react";
 

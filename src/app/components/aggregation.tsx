@@ -45,13 +45,11 @@ type Aggregation = keyof typeof AGGREGATION_FUNCTIONS;
 
 const AGGREGATIONS = Object.keys(AGGREGATION_FUNCTIONS) as Aggregation[];
 
-type TransactionsAggregationsProps = {
+type AggregationProps = {
   transactions: TransactionDTO[];
 };
 
-export const TransactionsAggregations = (
-  props: TransactionsAggregationsProps,
-) => {
+export const Aggregation = (props: AggregationProps) => {
   const { transactions } = props;
   const [columnsKey, setColumnsKey] = useState<GroupingKey>("status");
   const [rowsKey, setRowsKey] = useState<GroupingKey>("transaction_type");

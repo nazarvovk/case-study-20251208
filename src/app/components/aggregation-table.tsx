@@ -1,6 +1,6 @@
 "use client";
 import { TransactionDTO } from "@/lib/entities/transaction";
-import { GroupingKey } from "./transactions-aggregations";
+import { GroupingKey } from "./aggregation";
 import { cn, uniqueSorted } from "@/lib/utils";
 import { JSX, memo, useMemo, useState } from "react";
 import { EyeClosedIcon, EyeOpenIcon } from "./icons";
