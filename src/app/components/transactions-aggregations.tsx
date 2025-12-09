@@ -4,6 +4,7 @@ import { StrictExtract } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { Select } from "./select";
 import { AggregationTable } from "./aggregation-table";
+import { Filter } from "./filter";
 
 const GROUPING_KEYS = ["transaction_type", "status", "year"] as const;
 
@@ -66,6 +67,28 @@ export const TransactionsAggregations = (
     [columnsKey],
   );
 
+  const [filters, setFilters] = useState<{ key: GroupingKey; value: string }[]>(
+    [],
+  );
+  const availableFilterKeys = useMemo(
+    () =>
+      GROUPING_KEYS.filter(
+        (key) =>
+          key !== columnsKey &&
+          key !== rowsKey &&
+          !filters.find((filter) => filter.key === key),
+      ),
+    [rowsKey, columnsKey, filters],
+  );
+
+  const filteredTransactions = useMemo(() => {
+    let result = transactions;
+    for (const filter of filters) {
+      result = result.filter((t) => t[filter.key] === filter.value);
+    }
+    return result;
+  }, [transactions, filters]);
+
   return (
     <div className="px-8 py-6 outline outline-neutral-300 shadow-sm rounded-md w-min">
       <div className="mb-2 space-y-2">
@@ -95,9 +118,38 @@ export const TransactionsAggregations = (
             label="Columns →"
           />
         </div>
+
+        <div className="space-y-2">
+          {filters.map((filter) => (
+            <Filter
+              key={filter.key}
+              filter={filter}
+              setFilters={setFilters}
+              availableFilterKeys={availableFilterKeys}
+              transactions={transactions}
+            />
+          ))}
+        </div>
+        {availableFilterKeys.length > 0 && (
+          <button
+            className="text-xs text-neutral-500 mt-2 underline hover:text-neutral-700 cursor-pointer"
+            title="Add Filter"
+            onClick={() => {
+              setFilters((prev) => [
+                ...prev,
+                {
+                  key: availableFilterKeys[0],
+                  value: transactions[0][availableFilterKeys[0]],
+                },
+              ]);
+            }}
+          >
+            + Add Filter
+          </button>
+        )}
       </div>
       <AggregationTable
-        transactions={transactions}
+        transactions={filteredTransactions}
         rowsKey={rowsKey}
         columnsKey={columnsKey}
         aggregationFunction={AGGREGATION_FUNCTIONS[aggregation]}
