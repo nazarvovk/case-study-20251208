@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Select } from "./select";
 import { AggregationTable } from "./aggregation-table";
 import { Filter, FilterState } from "./filter";
@@ -8,23 +8,22 @@ import { Filter, FilterState } from "./filter";
 export type AggregationFunction<T> = (values: T[]) => string | number;
 export type AggregationFunctions<T> = Record<string, AggregationFunction<T>>;
 export type AggregationProps<
-  T extends Record<string, unknown>,
+  T,
   TAggregationFns extends AggregationFunctions<T>,
 > = {
   data: T[];
   /**
    * Keys on which grouping is allowed
    */
-  // NOTE: here and below `keyof T & string`, becauseTypeScript doesn't correctly infer keyof Record<string, unknown>
-  keys: readonly (keyof T & string)[];
-  defaultRowsKey: keyof T & string;
-  defaultColumnsKey: keyof T & string;
+  keys: readonly (keyof T)[];
+  defaultRowsKey: keyof T;
+  defaultColumnsKey: keyof T;
   aggregationFunctions: TAggregationFns;
-  defaultAggregation: keyof TAggregationFns & string;
+  defaultAggregation: keyof TAggregationFns;
 };
 
-export const Aggregation = <
-  T extends Record<string, unknown>,
+const AggregationComponent = <
+  T,
   TAggregationFns extends AggregationFunctions<T>,
 >(
   props: AggregationProps<T, TAggregationFns>,
@@ -44,7 +43,7 @@ export const Aggregation = <
     [keys, columnsKey],
   );
 
-  const [filters, setFilters] = useState<FilterState[]>([]);
+  const [filters, setFilters] = useState<FilterState<T>[]>([]);
   const availableFilterKeys = useMemo(
     () =>
       keys.filter(
@@ -59,7 +58,9 @@ export const Aggregation = <
   const filteredData = useMemo(() => {
     let result = data;
     for (const filter of filters) {
-      result = result.filter((t) => t[filter.key] === filter.value);
+      result = result.filter(
+        (entry) => entry[filter.key as keyof typeof entry] === filter.value,
+      );
     }
     return result;
   }, [data, filters]);
@@ -143,3 +144,8 @@ export const Aggregation = <
     </div>
   );
 };
+
+// workaround for generic components with memo
+export const Aggregation = memo(
+  AggregationComponent,
+) as typeof AggregationComponent;

@@ -7,7 +7,7 @@ const TRANSACTION_GROUPING_KEYS = [
   "transaction_type",
   "status",
   "year",
-] as const;
+] as const satisfies (keyof TransactionDTO)[];
 
 const TRANSACTION_AGGREGATION_FUNCTIONS = {
   amountSum: (values: TransactionDTO[]) => {

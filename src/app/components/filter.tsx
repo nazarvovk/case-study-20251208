@@ -2,15 +2,15 @@ import { uniqueSorted } from "@/lib/utils";
 import { Select } from "./select";
 import { memo, useCallback, useMemo } from "react";
 
-export type FilterState = { key: string; value: unknown };
-type FilterProps = {
-  setFilters: React.Dispatch<React.SetStateAction<FilterState[]>>;
-  filter: FilterState;
-  availableFilterKeys: string[];
-  data: Record<string, unknown>[];
+export type FilterState<T> = { key: keyof T; value: unknown };
+type FilterProps<T> = {
+  setFilters: React.Dispatch<React.SetStateAction<FilterState<T>[]>>;
+  filter: FilterState<T>;
+  availableFilterKeys: (keyof T)[];
+  data: T[];
 };
 
-export const Filter = memo(function Filter(props: FilterProps) {
+function FilterComponent<T>(props: FilterProps<T>) {
   const { filter, setFilters, availableFilterKeys, data } = props;
 
   const keyOptions = useMemo(
@@ -23,7 +23,7 @@ export const Filter = memo(function Filter(props: FilterProps) {
   }, [filter.key, data]);
 
   const handleKeyChange = useCallback(
-    (newKey: string) => {
+    (newKey: keyof T) => {
       setFilters((prev) =>
         prev.map((f) =>
           f.key === filter.key
@@ -45,10 +45,12 @@ export const Filter = memo(function Filter(props: FilterProps) {
     [filter.key, setFilters],
   );
 
+  const filterKey = String(filter.key);
+
   return (
-    <div key={filter.key} className="flex items-center gap-2">
+    <div key={filterKey} className="flex items-center gap-2">
       <Select
-        name={`${filter.key}-filter-key`}
+        name={`${filterKey}-filter-key`}
         options={keyOptions}
         value={filter.key}
         onChange={handleKeyChange}
@@ -57,7 +59,7 @@ export const Filter = memo(function Filter(props: FilterProps) {
       <Select
         options={valueOptions}
         value={String(filter.value)}
-        name={`${filter.key}-filter-value`}
+        name={`${filterKey}-filter-value`}
         onChange={handleValueChange}
       />
       <button
@@ -71,4 +73,7 @@ export const Filter = memo(function Filter(props: FilterProps) {
       </button>
     </div>
   );
-});
+}
+
+// workaround for generic components with memo
+export const Filter = memo(FilterComponent) as typeof FilterComponent;

@@ -7,16 +7,14 @@ import {
   AggregationProps,
 } from "./aggregation";
 
-type AggregationsGridProps<
-  T extends Record<string, unknown>,
-  TAggregationFns extends AggregationFunctions<T>,
-> = AggregationProps<T, TAggregationFns>;
-
+/**
+ * Drop-in Aggregation component that handles multiple aggregations grid
+ */
 export const AggregationsGrid = <
-  T extends Record<string, unknown>,
+  T,
   TAggregationFns extends AggregationFunctions<T>,
 >(
-  props: AggregationsGridProps<T, TAggregationFns>,
+  props: AggregationProps<T, TAggregationFns>,
 ) => {
   const {
     data,

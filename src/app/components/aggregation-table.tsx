@@ -1,10 +1,10 @@
 "use client";
 
 import { cn, uniqueSorted } from "@/lib/utils";
-import { JSX, useMemo, useState } from "react";
+import { JSX, memo, useMemo, useState } from "react";
 import { EyeClosedIcon, EyeOpenIcon } from "./icons";
 
-type AggregationCellProps<T extends Record<string, unknown>> = {
+type AggregationCellProps<T> = {
   data: T[];
   aggregationFunction: (values: T[]) => string | number;
   rowsKey?: keyof T;
@@ -14,7 +14,7 @@ type AggregationCellProps<T extends Record<string, unknown>> = {
   className?: string;
 } & JSX.IntrinsicElements["td"];
 
-export const calculateAggregation = <T extends Record<string, unknown>>(
+export const calculateAggregation = <T,>(
   data: T[],
   aggregationFunction: (values: T[]) => string | number,
   rowsKey?: keyof T,
@@ -35,9 +35,7 @@ export const calculateAggregation = <T extends Record<string, unknown>>(
   return aggregationFunction(dataForCell);
 };
 
-function AggregationCell<T extends Record<string, unknown>>(
-  props: AggregationCellProps<T>,
-) {
+function AggregationCellComponent<T>(props: AggregationCellProps<T>) {
   const {
     data,
     aggregationFunction,
@@ -72,16 +70,19 @@ function AggregationCell<T extends Record<string, unknown>>(
   );
 }
 
-type AggregationTableProps<T extends Record<string, unknown>> = {
+// workaround for generic components with memo
+const AggregationCell = memo(
+  AggregationCellComponent,
+) as typeof AggregationCellComponent;
+
+type AggregationTableProps<T> = {
   data: T[];
   rowsKey: keyof T;
   columnsKey: keyof T;
   aggregationFunction: (values: T[]) => string | number;
 };
 
-export function AggregationTable<T extends Record<string, unknown>>(
-  props: AggregationTableProps<T>,
-) {
+function AggregationTableComponent<T>(props: AggregationTableProps<T>) {
   const { data, rowsKey, columnsKey, aggregationFunction } = props;
 
   // Unique values for a selected key
@@ -184,3 +185,8 @@ export function AggregationTable<T extends Record<string, unknown>>(
     </table>
   );
 }
+
+// workaround for generic components with memo
+export const AggregationTable = memo(
+  AggregationTableComponent,
+) as typeof AggregationTableComponent;

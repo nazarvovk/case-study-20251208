@@ -1,4 +1,4 @@
-export type SelectProps<T extends string> = {
+export type SelectProps<T> = {
   name: string;
   options: T[];
   value: T;
@@ -6,7 +6,7 @@ export type SelectProps<T extends string> = {
   label?: string;
 };
 
-export const Select = <T extends string>(props: SelectProps<T>) => {
+export const Select = <T,>(props: SelectProps<T>) => {
   const { name, options, value, onChange, label } = props;
   return (
     <div className="space-y-1 w-full">
@@ -17,13 +17,16 @@ export const Select = <T extends string>(props: SelectProps<T>) => {
         name={name}
         className="border rounded px-2 py-1 w-full"
         onChange={(e) => onChange(e.target.value as T)}
-        value={value}
+        value={String(value)}
       >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
+        {options.map((option) => {
+          const optionValue = String(option);
+          return (
+            <option key={optionValue} value={optionValue}>
+              {optionValue}
+            </option>
+          );
+        })}
       </select>
     </div>
   );
