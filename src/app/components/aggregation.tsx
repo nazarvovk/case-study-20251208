@@ -33,16 +33,6 @@ const AggregationComponent = <
   const [rowsKey, setRowsKey] = useState(props.defaultRowsKey);
   const [aggregation, setAggregation] = useState(props.defaultAggregation);
 
-  // Selecting the same key for both rows and columns not allowed
-  const columnsKeyOptions = useMemo(
-    () => keys.filter((key) => key !== rowsKey),
-    [keys, rowsKey],
-  );
-  const rowsKeyOptions = useMemo(
-    () => keys.filter((key) => key !== columnsKey),
-    [keys, columnsKey],
-  );
-
   const [filters, setFilters] = useState<FilterState<T>[]>([]);
   const availableFilterKeys = useMemo(
     () =>
@@ -53,6 +43,25 @@ const AggregationComponent = <
           !filters.find((filter) => filter.key === key),
       ),
     [keys, rowsKey, columnsKey, filters],
+  );
+
+  // Selecting the same key for both rows and columns not allowed,
+  // as well as selecting a filter key
+  const columnsKeyOptions = useMemo(
+    () =>
+      keys.filter(
+        (key) =>
+          key !== rowsKey && !filters.find((filter) => filter.key === key),
+      ),
+    [keys, rowsKey, filters],
+  );
+  const rowsKeyOptions = useMemo(
+    () =>
+      keys.filter(
+        (key) =>
+          key !== columnsKey && !filters.find((filter) => filter.key === key),
+      ),
+    [keys, columnsKey, filters],
   );
 
   const filteredData = useMemo(() => {
