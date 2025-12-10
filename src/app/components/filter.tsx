@@ -19,11 +19,7 @@ export const Filter = memo(function Filter(props: FilterProps) {
   );
 
   const valueOptions = useMemo(() => {
-    return uniqueSorted(
-      data
-        .map((entry) => String(entry[filter.key]))
-        .filter((v) => v !== undefined),
-    );
+    return uniqueSorted(data.map((entry) => String(entry[filter.key])));
   }, [filter.key, data]);
 
   const handleKeyChange = useCallback(

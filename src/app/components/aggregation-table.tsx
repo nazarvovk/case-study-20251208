@@ -14,6 +14,27 @@ type AggregationCellProps<T extends Record<string, unknown>> = {
   className?: string;
 } & JSX.IntrinsicElements["td"];
 
+export const calculateAggregation = <T extends Record<string, unknown>>(
+  data: T[],
+  aggregationFunction: (values: T[]) => string | number,
+  rowsKey?: keyof T,
+  row?: string,
+  columnsKey?: keyof T,
+  column?: string,
+) => {
+  let dataForCell = data;
+  // skip filtering if no rowsKey/columnsKey provided (total)
+  if (rowsKey || columnsKey) {
+    dataForCell = dataForCell.filter((entry) => {
+      return (
+        (!rowsKey || entry[rowsKey] === row) &&
+        (!columnsKey || entry[columnsKey] === column)
+      );
+    });
+  }
+  return aggregationFunction(dataForCell);
+};
+
 function AggregationCell<T extends Record<string, unknown>>(
   props: AggregationCellProps<T>,
 ) {
@@ -28,19 +49,18 @@ function AggregationCell<T extends Record<string, unknown>>(
     ...tdProps
   } = props;
 
-  const value = useMemo(() => {
-    let dataForCell = data;
-    // skip filtering if no rowsKey/columnsKey provided (total)
-    if (rowsKey || columnsKey) {
-      dataForCell = dataForCell.filter((entry) => {
-        return (
-          (!rowsKey || entry[rowsKey] === row) &&
-          (!columnsKey || entry[columnsKey] === column)
-        );
-      });
-    }
-    return aggregationFunction(dataForCell);
-  }, [aggregationFunction, column, columnsKey, row, rowsKey, data]);
+  const value = useMemo(
+    () =>
+      calculateAggregation(
+        data,
+        aggregationFunction,
+        rowsKey,
+        row,
+        columnsKey,
+        column,
+      ),
+    [aggregationFunction, column, columnsKey, row, rowsKey, data],
+  );
 
   return (
     <td

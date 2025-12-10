@@ -5,10 +5,8 @@ import { Select } from "./select";
 import { AggregationTable } from "./aggregation-table";
 import { Filter, FilterState } from "./filter";
 
-export type AggregationFunctions<T> = Record<
-  string,
-  (values: T[]) => string | number
->;
+export type AggregationFunction<T> = (values: T[]) => string | number;
+export type AggregationFunctions<T> = Record<string, AggregationFunction<T>>;
 export type AggregationProps<
   T extends Record<string, unknown>,
   TAggregationFns extends AggregationFunctions<T>,
@@ -21,7 +19,6 @@ export type AggregationProps<
   keys: readonly (keyof T & string)[];
   defaultRowsKey: keyof T & string;
   defaultColumnsKey: keyof T & string;
-
   aggregationFunctions: TAggregationFns;
   defaultAggregation: keyof TAggregationFns & string;
 };
