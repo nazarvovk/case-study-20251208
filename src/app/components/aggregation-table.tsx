@@ -1,25 +1,24 @@
 "use client";
-import { TransactionDTO } from "@/lib/entities/transaction";
-import { GroupingKey } from "./aggregation";
+
 import { cn, uniqueSorted } from "@/lib/utils";
-import { JSX, memo, useMemo, useState } from "react";
+import { JSX, useMemo, useState } from "react";
 import { EyeClosedIcon, EyeOpenIcon } from "./icons";
 
-type AggregationCellProps = {
-  transactions: TransactionDTO[];
-  aggregationFunction: (values: TransactionDTO[]) => string | number;
-  rowsKey?: GroupingKey;
-  columnsKey?: GroupingKey;
+type AggregationCellProps<T extends Record<string, unknown>> = {
+  data: T[];
+  aggregationFunction: (values: T[]) => string | number;
+  rowsKey?: keyof T;
+  columnsKey?: keyof T;
   row?: string;
   column?: string;
   className?: string;
 } & JSX.IntrinsicElements["td"];
 
-const AggregationCell = memo(function AggregationCell(
-  props: AggregationCellProps,
+function AggregationCell<T extends Record<string, unknown>>(
+  props: AggregationCellProps<T>,
 ) {
   const {
-    transactions,
+    data,
     aggregationFunction,
     rowsKey,
     columnsKey,
@@ -30,18 +29,18 @@ const AggregationCell = memo(function AggregationCell(
   } = props;
 
   const value = useMemo(() => {
-    let transactionsForCell = transactions;
+    let dataForCell = data;
     // skip filtering if no rowsKey/columnsKey provided (total)
     if (rowsKey || columnsKey) {
-      transactionsForCell = transactionsForCell.filter((transaction) => {
+      dataForCell = dataForCell.filter((entry) => {
         return (
-          (!rowsKey || transaction[rowsKey] === row) &&
-          (!columnsKey || transaction[columnsKey] === column)
+          (!rowsKey || entry[rowsKey] === row) &&
+          (!columnsKey || entry[columnsKey] === column)
         );
       });
     }
-    return aggregationFunction(transactionsForCell);
-  }, [aggregationFunction, column, columnsKey, row, rowsKey, transactions]);
+    return aggregationFunction(dataForCell);
+  }, [aggregationFunction, column, columnsKey, row, rowsKey, data]);
 
   return (
     <td
@@ -51,29 +50,28 @@ const AggregationCell = memo(function AggregationCell(
       {value}
     </td>
   );
-});
+}
 
-type AggregationTableProps = {
-  transactions: TransactionDTO[];
-  rowsKey: GroupingKey;
-  columnsKey: GroupingKey;
-  aggregationFunction: (values: TransactionDTO[]) => string | number;
+type AggregationTableProps<T extends Record<string, unknown>> = {
+  data: T[];
+  rowsKey: keyof T;
+  columnsKey: keyof T;
+  aggregationFunction: (values: T[]) => string | number;
 };
 
-export const AggregationTable = memo(function AggregationTable(
-  props: AggregationTableProps,
+export function AggregationTable<T extends Record<string, unknown>>(
+  props: AggregationTableProps<T>,
 ) {
-  const { transactions, rowsKey, columnsKey, aggregationFunction } = props;
+  const { data, rowsKey, columnsKey, aggregationFunction } = props;
 
   // Unique values for a selected key
   const columns = useMemo(
-    () =>
-      uniqueSorted(transactions.map((transaction) => transaction[columnsKey])),
-    [transactions, columnsKey],
+    () => uniqueSorted(data.map((entry) => entry[columnsKey])),
+    [data, columnsKey],
   );
   const rows = useMemo(
-    () => uniqueSorted(transactions.map((transaction) => transaction[rowsKey])),
-    [transactions, rowsKey],
+    () => uniqueSorted(data.map((entry) => entry[rowsKey])),
+    [data, rowsKey],
   );
   const [showTotals, setShowTotals] = useState(true);
 
@@ -93,10 +91,10 @@ export const AggregationTable = memo(function AggregationTable(
           </th>
           {columns.map((column) => (
             <th
-              key={column}
+              key={String(column)}
               className="px-2 py-1 font-bold border-b border-neutral-300"
             >
-              {column}
+              {String(column)}
             </th>
           ))}
           {showTotals && (
@@ -109,31 +107,31 @@ export const AggregationTable = memo(function AggregationTable(
       <tbody>
         {rows.map((row, i) => (
           <tr
-            key={row}
+            key={String(row)}
             className={cn(
               "hover:bg-neutral-200/50",
               i % 2 === 0 ? "bg-neutral-200/30" : "",
             )}
           >
             <th className="px-2 py-1 font-bold text-left text-neutral-500 border-r border-neutral-300">
-              {row}
+              {String(row)}
             </th>
             {columns.map((column) => (
               <AggregationCell
-                key={column}
-                transactions={transactions}
+                key={String(column)}
+                data={data}
                 rowsKey={rowsKey}
                 columnsKey={columnsKey}
-                row={row}
-                column={column}
+                row={String(row)}
+                column={String(column)}
                 aggregationFunction={aggregationFunction}
               />
             ))}
             {showTotals && (
               <AggregationCell
-                transactions={transactions}
+                data={data}
                 rowsKey={rowsKey}
-                row={row}
+                row={String(row)}
                 className="font-bold"
                 aggregationFunction={aggregationFunction}
               />
@@ -147,17 +145,17 @@ export const AggregationTable = memo(function AggregationTable(
             </th>
             {columns.map((column) => (
               <AggregationCell
-                key={column}
-                transactions={transactions}
+                key={String(column)}
+                data={data}
                 columnsKey={columnsKey}
-                column={column}
+                column={String(column)}
                 aggregationFunction={aggregationFunction}
               />
             ))}
             <AggregationCell
-              transactions={transactions}
+              data={data}
               className="font-bold underline cursor-help decoration-dotted"
-              title="Total for all transactions"
+              title="Total for all data"
               aggregationFunction={aggregationFunction}
             />
           </tr>
@@ -165,4 +163,4 @@ export const AggregationTable = memo(function AggregationTable(
       </tbody>
     </table>
   );
-});
+}

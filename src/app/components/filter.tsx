@@ -1,20 +1,17 @@
 import { uniqueSorted } from "@/lib/utils";
 import { Select } from "./select";
-import { GroupingKey } from "./aggregation";
-import { TransactionDTO } from "@/lib/entities/transaction";
 import { memo, useCallback, useMemo } from "react";
 
+export type FilterState = { key: string; value: unknown };
 type FilterProps = {
-  setFilters: React.Dispatch<
-    React.SetStateAction<{ key: GroupingKey; value: string }[]>
-  >;
-  filter: { key: GroupingKey; value: string };
-  availableFilterKeys: GroupingKey[];
-  transactions: TransactionDTO[];
+  setFilters: React.Dispatch<React.SetStateAction<FilterState[]>>;
+  filter: FilterState;
+  availableFilterKeys: string[];
+  data: Record<string, unknown>[];
 };
 
 export const Filter = memo(function Filter(props: FilterProps) {
-  const { filter, setFilters, availableFilterKeys, transactions } = props;
+  const { filter, setFilters, availableFilterKeys, data } = props;
 
   const keyOptions = useMemo(
     () => [...availableFilterKeys, filter.key],
@@ -23,23 +20,23 @@ export const Filter = memo(function Filter(props: FilterProps) {
 
   const valueOptions = useMemo(() => {
     return uniqueSorted(
-      transactions
-        .map((t) => String(t[filter.key]))
+      data
+        .map((entry) => String(entry[filter.key]))
         .filter((v) => v !== undefined),
     );
-  }, [filter.key, transactions]);
+  }, [filter.key, data]);
 
   const handleKeyChange = useCallback(
-    (newKey: GroupingKey) => {
+    (newKey: string) => {
       setFilters((prev) =>
         prev.map((f) =>
           f.key === filter.key
-            ? { key: newKey, value: transactions[0][newKey] }
+            ? { key: newKey, value: String(data[0][newKey]) }
             : f,
         ),
       );
     },
-    [filter.key, setFilters, transactions],
+    [filter.key, setFilters, data],
   );
   const handleValueChange = useCallback(
     (newValue: string) => {
@@ -63,7 +60,7 @@ export const Filter = memo(function Filter(props: FilterProps) {
       <span className="text-neutral-500">is</span>
       <Select
         options={valueOptions}
-        value={filter.value}
+        value={String(filter.value)}
         name={`${filter.key}-filter-value`}
         onChange={handleValueChange}
       />

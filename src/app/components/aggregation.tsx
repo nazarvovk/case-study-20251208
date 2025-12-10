@@ -1,91 +1,73 @@
 "use client";
-import type { TransactionDTO } from "@/lib/entities/transaction";
-import { StrictExtract } from "@/lib/utils";
+
 import { useMemo, useState } from "react";
 import { Select } from "./select";
 import { AggregationTable } from "./aggregation-table";
-import { Filter } from "./filter";
+import { Filter, FilterState } from "./filter";
 
-const GROUPING_KEYS = ["transaction_type", "status", "year"] as const;
-
-export type GroupingKey = StrictExtract<
-  keyof TransactionDTO,
-  (typeof GROUPING_KEYS)[number]
+export type AggregationFunctions<T> = Record<
+  string,
+  (values: T[]) => string | number
 >;
+export type AggregationProps<
+  T extends Record<string, unknown>,
+  TAggregationFns extends AggregationFunctions<T>,
+> = {
+  data: T[];
+  /**
+   * Keys on which grouping is allowed
+   */
+  // NOTE: here and below `keyof T & string`, becauseTypeScript doesn't correctly infer keyof Record<string, unknown>
+  keys: readonly (keyof T & string)[];
+  defaultRowsKey: keyof T & string;
+  defaultColumnsKey: keyof T & string;
 
-const AGGREGATION_FUNCTIONS = {
-  amountSum: (values: TransactionDTO[]) => {
-    const sum = values.reduce((acc, val) => acc + Number(val.amount), 0);
-    return `$ ${sum.toFixed(2)}`;
-  },
-  amountAverage: (values: TransactionDTO[]) => {
-    const average =
-      values.length === 0
-        ? 0
-        : values.reduce((acc, val) => acc + Number(val.amount), 0) /
-          values.length;
-    return `$ ${average.toFixed(2)}`;
-  },
-  amountMedian: (values: TransactionDTO[]) => {
-    if (values.length === 0) return "---";
-    const sortedAmounts = values
-      .map((val) => Number(val.amount))
-      .sort((a, b) => a - b);
-    const mid = Math.floor(sortedAmounts.length / 2);
-    const median =
-      sortedAmounts.length % 2 !== 0
-        ? sortedAmounts[mid]
-        : (sortedAmounts[mid - 1] + sortedAmounts[mid]) / 2;
-    return `$ ${median.toFixed(2)}`;
-  },
-  count: (values: TransactionDTO[]) => values.length,
+  aggregationFunctions: TAggregationFns;
+  defaultAggregation: keyof TAggregationFns & string;
 };
 
-type Aggregation = keyof typeof AGGREGATION_FUNCTIONS;
-
-const AGGREGATIONS = Object.keys(AGGREGATION_FUNCTIONS) as Aggregation[];
-
-type AggregationProps = {
-  transactions: TransactionDTO[];
-};
-
-export const Aggregation = (props: AggregationProps) => {
-  const { transactions } = props;
-  const [columnsKey, setColumnsKey] = useState<GroupingKey>("status");
-  const [rowsKey, setRowsKey] = useState<GroupingKey>("transaction_type");
-  const [aggregation, setAggregation] = useState<Aggregation>("amountSum");
+export const Aggregation = <
+  T extends Record<string, unknown>,
+  TAggregationFns extends AggregationFunctions<T>,
+>(
+  props: AggregationProps<T, TAggregationFns>,
+) => {
+  const { data, keys, aggregationFunctions } = props;
+  const [columnsKey, setColumnsKey] = useState(props.defaultColumnsKey);
+  const [rowsKey, setRowsKey] = useState(props.defaultRowsKey);
+  const [aggregation, setAggregation] = useState(props.defaultAggregation);
 
   // Selecting the same key for both rows and columns not allowed
   const columnsKeyOptions = useMemo(
-    () => GROUPING_KEYS.filter((key) => key !== rowsKey),
-    [rowsKey],
+    () => keys.filter((key) => key !== rowsKey),
+    [keys, rowsKey],
   );
   const rowsKeyOptions = useMemo(
-    () => GROUPING_KEYS.filter((key) => key !== columnsKey),
-    [columnsKey],
+    () => keys.filter((key) => key !== columnsKey),
+    [keys, columnsKey],
   );
 
-  const [filters, setFilters] = useState<{ key: GroupingKey; value: string }[]>(
-    [],
-  );
+  const [filters, setFilters] = useState<FilterState[]>([]);
   const availableFilterKeys = useMemo(
     () =>
-      GROUPING_KEYS.filter(
+      keys.filter(
         (key) =>
           key !== columnsKey &&
           key !== rowsKey &&
           !filters.find((filter) => filter.key === key),
       ),
-    [rowsKey, columnsKey, filters],
+    [keys, rowsKey, columnsKey, filters],
   );
 
-  const filteredTransactions = useMemo(() => {
-    let result = transactions;
+  const filteredData = useMemo(() => {
+    let result = data;
     for (const filter of filters) {
       result = result.filter((t) => t[filter.key] === filter.value);
     }
     return result;
-  }, [transactions, filters]);
+  }, [data, filters]);
+
+  const aggregationFunction = aggregationFunctions[aggregation];
 
   return (
     <div className="px-8 py-6 outline outline-neutral-300 shadow-sm rounded-md w-min">
@@ -120,11 +102,11 @@ export const Aggregation = (props: AggregationProps) => {
         <div className="space-y-2">
           {filters.map((filter) => (
             <Filter
-              key={filter.key}
+              key={String(filter.key)}
               filter={filter}
               setFilters={setFilters}
               availableFilterKeys={availableFilterKeys}
-              transactions={transactions}
+              data={data}
             />
           ))}
         </div>
@@ -137,7 +119,7 @@ export const Aggregation = (props: AggregationProps) => {
                 ...prev,
                 {
                   key: availableFilterKeys[0],
-                  value: transactions[0][availableFilterKeys[0]],
+                  value: data[0][availableFilterKeys[0]],
                 },
               ]);
             }}
@@ -147,15 +129,15 @@ export const Aggregation = (props: AggregationProps) => {
         )}
       </div>
       <AggregationTable
-        transactions={filteredTransactions}
+        data={filteredData}
         rowsKey={rowsKey}
         columnsKey={columnsKey}
-        aggregationFunction={AGGREGATION_FUNCTIONS[aggregation]}
+        aggregationFunction={aggregationFunction}
       />
       <div className="mt-2">
         <Select
           name="aggregation"
-          options={AGGREGATIONS}
+          options={Object.keys(aggregationFunctions)}
           value={aggregation}
           onChange={setAggregation}
           label="Aggregation"
