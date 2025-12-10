@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## About
+This is a test assignment.
 
-## Getting Started
+The implementation uses Next.js.
+Parallel routes are used to separate the Transaction aggregation grid for loading and error handling.
 
-First, run the development server:
+## Architecture and assumptions
+The app structure separates generic components and specific settings for the provided Transactions stub data. See [`transactions-aggregation-grid.tsx`](src/app/@transactions/transactions-aggregation-grid.tsx).
 
+The allowed grouping keys, available aggregation functions, and their defaults can be changed without changing the underlying generic components.
+
+This way, the aggregation components can be used with other entities, not just the provided Transactions.
+
+**Features overview:**
+
+- Row and column keys can be changed, swapped. The values for rows/columns are calculated from the provided data.
+- Totals, which can be shown and hidden, are calculated for rows, columns, and the entire table.
+- `More than one field for columns` is implemented in the form of filters which can be added and removed. As the interface will always be a 2-dimensional table, this can be thought of as taking a 2D slice out of a 3+ dimensional chart.
+- Aggregation functions can be changed, new ones added fairly trivially in code.
+- More views can be added to see different aggregation setups at the same time.
+
+## Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+```
+
+## Run the server
+In dev mode:
+```bash
 pnpm dev
-# or
-bun dev
+```
+
+or build & run:
+```bash
+pnpm build && pnpm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run the tests
+```bash
+pnpm test
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Hypothetical TODOs:
+- Persistent state (Local storage / Query params)
+- Remove aggregation views after adding more than 1
+- Column/row sorting
+- Visual polish
