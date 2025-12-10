@@ -4,6 +4,8 @@ This is a test assignment.
 The implementation uses Next.js.
 Parallel routes are used to separate the Transaction aggregation grid for loading and error handling.
 
+No additional external packages used other than for styling (Tailwindcss), linting, and testing.
+
 ## Architecture and assumptions
 The app structure separates generic components and specific settings for the provided Transactions stub data. See [`transactions-aggregation-grid.tsx`](src/app/@transactions/transactions-aggregation-grid.tsx).
 
